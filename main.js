@@ -3,9 +3,28 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 const TAU = Math.PI * 2;
 const TRACK_WIDTH = 18;
-const TRACK_SEGMENTS = 420;
+const TRACK_SEGMENTS = 360;
 const TRACK_MARGIN = 88;
 const TARGET_CAR_LENGTH = 4.8;
+const CIRCUIT_SHAPE_SCALE_X = 1;
+const CIRCUIT_SHAPE_SCALE_Z = 0.82;
+const CIRCUIT_CONTROL_PROFILE = [
+  [-20, 288],
+  [4, 275],
+  [28, 245],
+  [52, 210],
+  [76, 184],
+  [100, 182],
+  [124, 205],
+  [148, 240],
+  [172, 271],
+  [196, 283],
+  [220, 279],
+  [244, 268],
+  [268, 265],
+  [292, 272],
+  [316, 284],
+];
 
 const CAR_CONFIG = {
   acceleration: 20.5,
@@ -228,14 +247,14 @@ function setupTrack() {
   scene.add(createEdgeLine(TRACK_WIDTH * 0.5 - 0.8, "#f5ecd1"));
   scene.add(createEdgeLine(-(TRACK_WIDTH * 0.5 - 0.8), "#f5ecd1"));
   scene.add(createCenterGuideLine());
-  scene.add(createStartLine());
+  scene.add(createStartArch());
 
   prepareMinimap();
 }
 
 function setupScenery() {
-  const trunkGeometry = new THREE.CylinderGeometry(0.2, 0.28, 1.7, 6);
-  const leavesGeometry = new THREE.ConeGeometry(1, 2.8, 8);
+  const trunkGeometry = new THREE.CylinderGeometry(0.2, 0.28, 1.7, 5);
+  const leavesGeometry = new THREE.ConeGeometry(1, 2.8, 6);
   const trunkMaterial = new THREE.MeshStandardMaterial({
     color: "#7c5733",
     flatShading: true,
@@ -245,7 +264,7 @@ function setupScenery() {
     flatShading: true,
   });
 
-  const treeCount = 72;
+  const treeCount = 48;
   const trunks = new THREE.InstancedMesh(trunkGeometry, trunkMaterial, treeCount);
   const leaves = new THREE.InstancedMesh(leavesGeometry, leavesMaterial, treeCount);
 
@@ -771,37 +790,17 @@ function resetCar(initialReset = false) {
 }
 
 function createTrackData() {
-  const controlPoints = [
-    [-110, 182],
-    [-18, 194],
-    [82, 184],
-    [168, 140],
-    [214, 72],
-    [220, -10],
-    [190, -86],
-    [126, -146],
-    [42, -180],
-    [-48, -186],
-    [-132, -158],
-    [-198, -100],
-    [-228, -20],
-    [-214, 68],
-    [-164, 136],
-    [-90, 168],
-    [-18, 148],
-    [34, 108],
-    [78, 60],
-    [126, 38],
-    [156, 82],
-    [138, 138],
-    [72, 150],
-    [12, 118],
-    [-54, 82],
-    [-122, 94],
-    [-158, 146],
-  ].map(([x, z]) => new THREE.Vector3(x, 0, z));
+  const controlPoints = CIRCUIT_CONTROL_PROFILE.map(([degrees, radius]) => {
+    const angle = THREE.MathUtils.degToRad(degrees);
 
-  const curve = new THREE.CatmullRomCurve3(controlPoints, true, "catmullrom", 0.32);
+    return new THREE.Vector3(
+      Math.cos(angle) * radius * CIRCUIT_SHAPE_SCALE_X,
+      0,
+      Math.sin(angle) * radius * CIRCUIT_SHAPE_SCALE_Z,
+    );
+  });
+
+  const curve = new THREE.CatmullRomCurve3(controlPoints, true, "centripetal");
   const rawSamples = [];
   const rawTangents = [];
   const rawNormals = [];
@@ -834,7 +833,7 @@ function createTrackData() {
   }
 
   return {
-    layoutName: "Switchback Circuit",
+    layoutName: "Grand Arc Circuit",
     samples,
     tangents,
     normals,
@@ -917,24 +916,69 @@ function createCenterGuideLine() {
   );
 }
 
-function createStartLine() {
-  const texture = createStartLineTexture();
-  const startLine = new THREE.Mesh(
-    new THREE.PlaneGeometry(TRACK_WIDTH - 1.3, 3.8),
-    new THREE.MeshBasicMaterial({
-      map: texture,
-      transparent: true,
-      side: THREE.DoubleSide,
-    }),
+function createStartArch() {
+  const checkerTexture = createCheckerTexture();
+  checkerTexture.wrapS = THREE.RepeatWrapping;
+  checkerTexture.wrapT = THREE.RepeatWrapping;
+  checkerTexture.repeat.set(5.4, 1.2);
+  checkerTexture.anisotropy = 4;
+
+  const group = new THREE.Group();
+  const postOffset = TRACK_WIDTH * 0.5 + 1.2;
+  const postHeight = 3.4;
+  const archRise = 4.1;
+  const postMaterial = new THREE.MeshStandardMaterial({
+    color: "#a2a9b3",
+    metalness: 0.38,
+    roughness: 0.42,
+  });
+  const archMaterial = new THREE.MeshStandardMaterial({
+    map: checkerTexture,
+    roughness: 0.52,
+    metalness: 0.08,
+  });
+  const stripeMaterial = new THREE.MeshStandardMaterial({
+    color: "#f4efe3",
+    roughness: 0.46,
+    metalness: 0,
+  });
+  const postGeometry = new THREE.CylinderGeometry(0.24, 0.3, postHeight, 10);
+
+  const leftPost = new THREE.Mesh(postGeometry, postMaterial);
+  leftPost.position.set(-postOffset, postHeight * 0.5, 0);
+
+  const rightPost = new THREE.Mesh(postGeometry, postMaterial);
+  rightPost.position.set(postOffset, postHeight * 0.5, 0);
+
+  const archPoints = Array.from({ length: 16 }, (_, index) => {
+    const progress = index / 15;
+    return new THREE.Vector3(
+      THREE.MathUtils.lerp(-postOffset, postOffset, progress),
+      postHeight + Math.sin(progress * Math.PI) * archRise,
+      0,
+    );
+  });
+  const archCurve = new THREE.CatmullRomCurve3(archPoints, false, "centripetal");
+  const archMesh = new THREE.Mesh(
+    new THREE.TubeGeometry(archCurve, 40, 0.35, 12, false),
+    archMaterial,
   );
 
-  startLine.rotation.x = -Math.PI * 0.5;
-  startLine.rotation.y = Math.atan2(track.startTangent.x, track.startTangent.z);
-  startLine.position.copy(track.startPoint).setY(0.06);
-  return startLine;
+  const roadStripe = new THREE.Mesh(
+    new THREE.PlaneGeometry(TRACK_WIDTH - 1.6, 0.95),
+    stripeMaterial,
+  );
+  roadStripe.rotation.x = -Math.PI * 0.5;
+  roadStripe.position.y = 0.05;
+
+  group.add(leftPost, rightPost, archMesh, roadStripe);
+  group.rotation.y = Math.atan2(track.startTangent.x, track.startTangent.z);
+  group.position.copy(track.startPoint).setY(0.02);
+
+  return group;
 }
 
-function createStartLineTexture() {
+function createCheckerTexture() {
   const canvas = document.createElement("canvas");
   canvas.width = 320;
   canvas.height = 128;
