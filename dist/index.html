@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mustang GT Track Drive</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2315222b'/%3E%3Cpath d='M12 38h8l6-12h12l6 12h8l-4-18H16z' fill='%23ffc857'/%3E%3C/svg%3E"
+    />
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "./node_modules/three/build/three.module.js",
+          "three/addons/": "./node_modules/three/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module" crossorigin src="/assets/index-CyECpao2.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-DuZhIZ3p.css">
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <div class="hud hud--left">
+      <div class="hud__card hud__card--map">
+        <span class="hud__label">Track Map</span>
+        <canvas class="minimap" data-minimap width="240" height="240"></canvas>
+        <div class="hud__stats">
+          <div>
+            <span class="hud__mini-label">Lap</span>
+            <strong class="hud__mini-value" data-lap>0</strong>
+          </div>
+          <div>
+            <span class="hud__mini-label">Layout</span>
+            <strong class="hud__mini-value">Curved Loop</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hud hud--right">
+      <div class="hud__card hud__card--speed">
+        <span class="hud__label">Speedometer</span>
+        <div class="speedometer">
+          <div class="speedometer__dial" data-speedometer-dial>
+            <div class="speedometer__needle" data-speedometer-needle></div>
+            <div class="speedometer__hub"></div>
+            <div class="speedometer__readout">
+              <strong data-speed>0</strong>
+              <span>mph</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hud hud--bottom">
+      <div class="hud__card hud__card--wide">
+        <span class="hud__label">Controls</span>
+        <strong class="hud__value hud__value--small">
+          W / ArrowUp accelerate
+          <br />
+          S / ArrowDown brake or reverse
+          <br />
+          A / D steer
+          <br />
+          Space handbrake drift
+          <br />
+          R reset
+        </strong>
+      </div>
+    </div>
+
+    <div class="loading" data-loading>
+      <div class="loading__panel">
+        <span class="loading__eyebrow">Three.js Arcade Drive</span>
+        <strong class="loading__title">Loading Mustang GT...</strong>
+      </div>
+    </div>
+
+  </body>
+</html>
