@@ -59,6 +59,9 @@ const minimapCanvas = document.querySelector("[data-minimap]");
 const minimapContext = minimapCanvas.getContext("2d");
 const speedometerDial = document.querySelector("[data-speedometer-dial]");
 const speedometerNeedle = document.querySelector("[data-speedometer-needle]");
+const roadTextureUrl = new URL("./assets/road-texture.svg", import.meta.url).href;
+const grassTextureUrl = new URL("./assets/grass-texture.svg", import.meta.url).href;
+const mustangModelUrl = new URL("./assets/mustang-gt.glb", import.meta.url).href;
 
 const textureLoader = new THREE.TextureLoader();
 const gltfLoader = new GLTFLoader();
@@ -119,8 +122,8 @@ loadScene().catch((error) => {
 
 async function loadScene() {
   const [roadTexture, grassTexture] = await Promise.all([
-    textureLoader.loadAsync("./assets/road-texture.svg"),
-    textureLoader.loadAsync("./assets/grass-texture.svg"),
+    textureLoader.loadAsync(roadTextureUrl),
+    textureLoader.loadAsync(grassTextureUrl),
   ]);
 
   configureTexture(roadTexture, 1, 1);
@@ -136,7 +139,7 @@ async function loadScene() {
   groundMesh.material.map = grassTexture;
   groundMesh.material.needsUpdate = true;
 
-  const gltf = await gltfLoader.loadAsync("./assets/mustang-gt.glb");
+  const gltf = await gltfLoader.loadAsync(mustangModelUrl);
   const model = gltf.scene;
 
   prepareModel(model);
