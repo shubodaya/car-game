@@ -114,6 +114,7 @@ const startButton = document.querySelector("[data-start-button]");
 const resumeButton = document.querySelector("[data-resume-button]");
 const exitButton = document.querySelector("[data-exit-button]");
 const trackTitle = document.querySelector("[data-track-title]");
+const touchButtons = Array.from(document.querySelectorAll("[data-touch-key]"));
 const roadTextureUrl = new URL("./assets/road-texture.svg", import.meta.url).href;
 const grassTextureUrl = new URL("./assets/grass-texture.svg", import.meta.url).href;
 const mustangModelUrl = new URL("./assets/mustang-gt.glb", import.meta.url).href;
@@ -369,6 +370,46 @@ function setupEvents() {
     if (gameState === GAME_STATE.PLAYING) {
       pauseGame();
     }
+  });
+
+  touchButtons.forEach((button) => {
+    const keyCode = button.dataset.touchKey;
+
+    if (!keyCode) {
+      return;
+    }
+
+    const releaseTouchKey = (event) => {
+      if (event) {
+        event.preventDefault();
+      }
+
+      keys.delete(keyCode);
+      button.classList.remove("is-active");
+    };
+
+    button.addEventListener(
+      "touchstart",
+      (event) => {
+        event.preventDefault();
+      },
+      { passive: false },
+    );
+
+    button.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+
+      if (gameState !== GAME_STATE.PLAYING) {
+        return;
+      }
+
+      keys.add(keyCode);
+      button.classList.add("is-active");
+    });
+    button.addEventListener("pointerup", releaseTouchKey);
+    button.addEventListener("pointercancel", releaseTouchKey);
+    button.addEventListener("pointerleave", releaseTouchKey);
+    button.addEventListener("contextmenu", (event) => event.preventDefault());
   });
 }
 
@@ -776,6 +817,7 @@ function announceLapComplete() {
 
 function clearInputs() {
   keys.clear();
+  touchButtons.forEach((button) => button.classList.remove("is-active"));
 }
 
 function resetSession() {

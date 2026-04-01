@@ -2,9 +2,9 @@
   color-scheme: dark;
   --bg-top: #7fc2ff;
   --bg-bottom: #dbf0ff;
-  --panel-bg: rgba(7, 22, 33, 0.72);
-  --panel-border: rgba(255, 255, 255, 0.16);
-  --panel-shadow: rgba(4, 10, 14, 0.28);
+  --panel-bg: rgba(7, 22, 33, 0.48);
+  --panel-border: rgba(255, 255, 255, 0.12);
+  --panel-shadow: rgba(4, 10, 14, 0.22);
   --label: rgba(232, 245, 255, 0.7);
   --value: #f6fbff;
   --accent: #ffc857;
@@ -77,29 +77,29 @@ canvas {
 .hud__card,
 .lap-banner {
   border: 1px solid var(--panel-border);
-  border-radius: 20px;
-  backdrop-filter: blur(14px);
+  border-radius: 18px;
+  backdrop-filter: blur(10px);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.015)),
     var(--panel-bg);
-  box-shadow: 0 16px 40px var(--panel-shadow);
+  box-shadow: 0 12px 30px var(--panel-shadow);
 }
 
 .hud__card {
   min-width: 160px;
-  padding: 0.95rem 1rem;
+  padding: 0.78rem 0.86rem;
 }
 
 .hud__card--map {
-  width: 272px;
+  width: 226px;
 }
 
 .hud__card--speed {
-  width: 236px;
+  width: 194px;
 }
 
 .hud__card--wide {
-  width: 320px;
+  width: 236px;
 }
 
 .hud__label,
@@ -113,7 +113,7 @@ canvas {
 }
 
 .hud__label {
-  margin-bottom: 0.55rem;
+  margin-bottom: 0.42rem;
 }
 
 .hud__value {
@@ -124,16 +124,16 @@ canvas {
 }
 
 .hud__value--small {
-  font-size: 0.92rem;
-  line-height: 1.55;
+  font-size: 0.8rem;
+  line-height: 1.45;
   font-weight: 600;
 }
 
 .hud__stats {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
-  margin-top: 0.8rem;
+  gap: 0.8rem;
+  margin-top: 0.62rem;
 }
 
 .hud__mini-label {
@@ -148,16 +148,16 @@ canvas {
 .hud__mini-value {
   display: block;
   color: var(--value);
-  font-size: 1rem;
+  font-size: 0.88rem;
   line-height: 1.2;
 }
 
 .minimap {
-  width: 240px;
-  height: 240px;
-  border-radius: 18px;
+  width: 194px;
+  height: 194px;
+  border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(12, 22, 28, 0.9);
+  background: rgba(12, 22, 28, 0.72);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
 }
 
@@ -166,8 +166,8 @@ canvas {
   top: 1rem;
   left: 50%;
   z-index: 12;
-  min-width: 240px;
-  padding: 0.85rem 1.1rem;
+  min-width: 216px;
+  padding: 0.72rem 0.95rem;
   text-align: center;
   transform: translateX(-50%);
   transition:
@@ -181,7 +181,7 @@ canvas {
 .lap-banner__count {
   display: block;
   color: var(--value);
-  font-size: 2rem;
+  font-size: 1.7rem;
   line-height: 1;
   margin-top: 0.25rem;
 }
@@ -190,7 +190,7 @@ canvas {
   display: block;
   margin-top: 0.3rem;
   color: rgba(255, 255, 255, 0.72);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
 }
 
 .lap-banner.is-popping {
@@ -209,7 +209,7 @@ canvas {
 .speedometer__dial {
   --speed-progress: 0deg;
   position: relative;
-  width: 188px;
+  width: 148px;
   aspect-ratio: 1;
   border-radius: 50%;
   background:
@@ -227,7 +227,7 @@ canvas {
 .speedometer__dial::before {
   content: "";
   position: absolute;
-  inset: 16px;
+  inset: 13px;
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background:
@@ -238,9 +238,9 @@ canvas {
 .speedometer__needle {
   position: absolute;
   left: 50%;
-  top: 27px;
-  width: 6px;
-  height: 76px;
+  top: 22px;
+  width: 5px;
+  height: 62px;
   border-radius: 999px;
   background: linear-gradient(180deg, #ffe59a, #ff8c42);
   box-shadow: 0 0 18px rgba(255, 200, 87, 0.34);
@@ -252,8 +252,8 @@ canvas {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: #ffe59a;
   box-shadow:
@@ -273,7 +273,7 @@ canvas {
 
 .speedometer__readout strong {
   color: var(--value);
-  font-size: 2.15rem;
+  font-size: 1.75rem;
   line-height: 1;
 }
 
@@ -281,8 +281,58 @@ canvas {
   margin-top: 0.15rem;
   color: rgba(255, 255, 255, 0.58);
   letter-spacing: 0.18em;
-  font-size: 0.68rem;
+  font-size: 0.58rem;
   text-transform: uppercase;
+}
+
+.touch-controls {
+  position: fixed;
+  left: 1rem;
+  bottom: 1rem;
+  z-index: 14;
+  display: none;
+  grid-template-columns: repeat(2, 68px);
+  gap: 8px;
+  pointer-events: none;
+}
+
+.touch-controls__button {
+  min-height: 60px;
+  padding: 0.55rem 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  background: rgba(7, 22, 33, 0.46);
+  color: var(--value);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 12px 28px rgba(4, 10, 14, 0.2);
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
+.touch-controls__button span,
+.touch-controls__button strong {
+  display: block;
+}
+
+.touch-controls__button span {
+  font-size: 1.25rem;
+  line-height: 1;
+  color: #9ed8ff;
+}
+
+.touch-controls__button strong {
+  margin-top: 0.18rem;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.touch-controls__button.is-active {
+  border-color: rgba(255, 200, 87, 0.34);
+  background: rgba(38, 56, 68, 0.62);
+  box-shadow:
+    0 12px 28px rgba(4, 10, 14, 0.22),
+    0 0 0 1px rgba(255, 200, 87, 0.16);
 }
 
 .menu-screen,
@@ -420,6 +470,14 @@ body[data-game-state="start"] .lap-banner {
   transform: translate(-50%, -10px);
 }
 
+body[data-game-state="loading"] .touch-controls,
+body[data-game-state="start"] .touch-controls,
+body[data-game-state="paused"] .touch-controls {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 @keyframes lap-pop {
   0% {
     transform: translateX(-50%) scale(0.98);
@@ -442,30 +500,28 @@ body[data-game-state="start"] .lap-banner {
   }
 
   .hud--bottom {
-    left: auto;
-    right: 1rem;
-    bottom: 15rem;
+    display: none;
   }
 
   .hud__card--map {
-    width: 232px;
+    width: 184px;
   }
 
   .minimap {
-    width: 200px;
-    height: 200px;
+    width: 152px;
+    height: 152px;
   }
 
   .hud__card--speed {
-    width: 212px;
+    width: 176px;
   }
 
   .speedometer__dial {
-    width: 164px;
+    width: 132px;
   }
 
   .hud__card--wide {
-    width: 246px;
+    width: 208px;
   }
 
   .lap-banner {
@@ -481,5 +537,59 @@ body[data-game-state="start"] .lap-banner {
   .menu-screen__panel,
   .loading__panel {
     padding: 1.3rem 1.1rem;
+  }
+
+  .touch-controls {
+    display: grid;
+  }
+}
+
+@media (max-width: 520px) {
+  .hud--left {
+    top: 0.7rem;
+    left: 0.7rem;
+  }
+
+  .hud--right {
+    right: 0.7rem;
+    bottom: 0.7rem;
+  }
+
+  .hud__card {
+    padding: 0.68rem 0.72rem;
+    border-radius: 16px;
+  }
+
+  .hud__card--map {
+    width: 164px;
+  }
+
+  .minimap {
+    width: 132px;
+    height: 132px;
+  }
+
+  .hud__card--speed {
+    width: 152px;
+  }
+
+  .speedometer__dial {
+    width: 116px;
+  }
+
+  .touch-controls {
+    left: 0.7rem;
+    bottom: 0.7rem;
+    grid-template-columns: repeat(2, 60px);
+    gap: 7px;
+  }
+
+  .touch-controls__button {
+    min-height: 54px;
+    border-radius: 14px;
+  }
+
+  .touch-controls__button span {
+    font-size: 1.1rem;
   }
 }
