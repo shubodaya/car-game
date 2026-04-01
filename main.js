@@ -42,11 +42,11 @@ const CIRCUIT_CONTROL_PROFILE = [
 ];
 
 const CAR_CONFIG = {
-  acceleration: 20.5,
-  reverseAcceleration: 8.5,
-  brakeForce: 32,
-  maxForwardSpeed: 42,
-  maxReverseSpeed: 12,
+  acceleration: 27.5,
+  reverseAcceleration: 10.5,
+  brakeForce: 36,
+  maxForwardSpeed: 58,
+  maxReverseSpeed: 14,
   coastDamping: 1.8,
   roadGrip: 10.2,
   offroadGrip: 14,
@@ -1022,7 +1022,7 @@ function prepareMinimap() {
 
   track.minimap = {
     scale,
-    offsetX: width * 0.5 - track.bounds.centerX * scale,
+    offsetX: width * 0.5 + track.bounds.centerX * scale,
     offsetY: height * 0.5 + track.bounds.centerZ * scale,
   };
 
@@ -1101,7 +1101,7 @@ function renderMinimap() {
 
 function worldToMinimap(point) {
   return {
-    x: point.x * track.minimap.scale + track.minimap.offsetX,
+    x: track.minimap.offsetX - point.x * track.minimap.scale,
     y: track.minimap.offsetY - point.z * track.minimap.scale,
   };
 }
