@@ -3,27 +3,42 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 const TAU = Math.PI * 2;
 const TRACK_WIDTH = 18;
-const TRACK_SEGMENTS = 360;
+const TRACK_SEGMENTS = 420;
 const TRACK_MARGIN = 88;
 const TARGET_CAR_LENGTH = 4.8;
-const CIRCUIT_SHAPE_SCALE_X = 1;
-const CIRCUIT_SHAPE_SCALE_Z = 0.82;
+const START_REFERENCE_POINT = new THREE.Vector3(126, 0, -42);
+const START_REFERENCE_DIRECTION = new THREE.Vector3(-0.18, 0, 1).normalize();
 const CIRCUIT_CONTROL_PROFILE = [
-  [-20, 288],
-  [4, 275],
-  [28, 245],
-  [52, 210],
-  [76, 184],
-  [100, 182],
-  [124, 205],
-  [148, 240],
-  [172, 271],
-  [196, 283],
-  [220, 279],
-  [244, 268],
-  [268, 265],
-  [292, 272],
-  [316, 284],
+  [20, 40],
+  [12, -28],
+  [0, -118],
+  [-4, -214],
+  [18, -302],
+  [72, -340],
+  [136, -332],
+  [174, -280],
+  [182, -212],
+  [158, -138],
+  [132, -74],
+  [118, 10],
+  [110, 118],
+  [108, 236],
+  [80, 314],
+  [18, 342],
+  [-70, 332],
+  [-152, 274],
+  [-226, 216],
+  [-302, 164],
+  [-362, 90],
+  [-382, 8],
+  [-362, -76],
+  [-306, -146],
+  [-232, -188],
+  [-156, -184],
+  [-112, -126],
+  [-86, -64],
+  [-52, -4],
+  [-12, 8],
 ];
 
 const CAR_CONFIG = {
@@ -51,10 +66,10 @@ const CAR_CONFIG = {
 };
 
 const CAMERA_CONFIG = {
-  distance: 5.4,
-  height: 2.4,
-  lookAhead: 2.6,
-  lookHeight: 1.12,
+  distance: 6.5,
+  height: 2.55,
+  lookAhead: 2.15,
+  lookHeight: 0.98,
 };
 
 const GAME_STATE = {
@@ -790,15 +805,9 @@ function resetCar(initialReset = false) {
 }
 
 function createTrackData() {
-  const controlPoints = CIRCUIT_CONTROL_PROFILE.map(([degrees, radius]) => {
-    const angle = THREE.MathUtils.degToRad(degrees);
-
-    return new THREE.Vector3(
-      Math.cos(angle) * radius * CIRCUIT_SHAPE_SCALE_X,
-      0,
-      Math.sin(angle) * radius * CIRCUIT_SHAPE_SCALE_Z,
-    );
-  });
+  const controlPoints = CIRCUIT_CONTROL_PROFILE.map(
+    ([x, z]) => new THREE.Vector3(x, 0, z),
+  );
 
   const curve = new THREE.CatmullRomCurve3(controlPoints, true, "centripetal");
   const rawSamples = [];
@@ -817,7 +826,7 @@ function createTrackData() {
     rawNormals.push(normal);
   }
 
-  const startIndex = pickStartIndex(rawTangents);
+  const startIndex = pickStartIndex(rawSamples, rawTangents);
   const samples = rotateLoop(rawSamples, startIndex);
   const tangents = rotateLoop(rawTangents, startIndex);
   const normals = rotateLoop(rawNormals, startIndex);
@@ -833,7 +842,7 @@ function createTrackData() {
   }
 
   return {
-    layoutName: "Grand Arc Circuit",
+    layoutName: "Harbor Ribbon Circuit",
     samples,
     tangents,
     normals,
@@ -1129,7 +1138,7 @@ function updateTrackInfo(target, position) {
   }
 }
 
-function pickStartIndex(tangents) {
+function pickStartIndex(samples, tangents) {
   let bestIndex = 0;
   let bestScore = Infinity;
 
@@ -1137,8 +1146,11 @@ function pickStartIndex(tangents) {
     const previous = tangents[(index - 12 + tangents.length) % tangents.length];
     const next = tangents[(index + 12) % tangents.length];
     const bendScore = 1 - THREE.MathUtils.clamp(previous.dot(next), -1, 1);
-    const forwardPenalty = tangents[index].z < 0.22 ? 0.16 : 0;
-    const score = bendScore + forwardPenalty;
+    const directionPenalty = 1 - Math.max(0, tangents[index].dot(START_REFERENCE_DIRECTION));
+    const positionPenalty =
+      samples[index].distanceTo(START_REFERENCE_POINT) /
+      Math.max(1, TRACK_WIDTH * 3);
+    const score = bendScore * 0.85 + directionPenalty * 0.45 + positionPenalty;
 
     if (score < bestScore) {
       bestScore = score;
