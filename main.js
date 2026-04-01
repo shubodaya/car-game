@@ -2,36 +2,47 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 const TAU = Math.PI * 2;
-const TRACK_WIDTH = 16;
-const TRACK_SEGMENTS = 360;
-const TRACK_MARGIN = 72;
+const TRACK_WIDTH = 18;
+const TRACK_SEGMENTS = 420;
+const TRACK_MARGIN = 88;
 const TARGET_CAR_LENGTH = 4.8;
 
 const CAR_CONFIG = {
-  acceleration: 19,
-  reverseAcceleration: 8,
-  brakeForce: 31,
-  maxForwardSpeed: 40,
+  acceleration: 20.5,
+  reverseAcceleration: 8.5,
+  brakeForce: 32,
+  maxForwardSpeed: 42,
   maxReverseSpeed: 12,
-  coastDamping: 1.6,
-  roadGrip: 11,
-  offroadGrip: 19,
-  handbrakeGrip: 5.2,
-  driftSlipBoost: 1.85,
-  maxDriftLateral: 6.4,
-  steerResponse: 9,
-  steerRelease: 12,
-  lowSpeedSteer: 2.45,
-  highSpeedSteer: 1.08,
-  offroadDrag: 4.1,
-  trackAssist: 5.2,
+  coastDamping: 1.8,
+  roadGrip: 10.2,
+  offroadGrip: 14,
+  handbrakeGrip: 1.7,
+  driftMinSpeed: 8,
+  driftSlipBase: 7.4,
+  driftSlipBoost: 0.24,
+  driftYawBoost: 2.15,
+  driftForwardLoss: 4.2,
+  maxDriftLateral: 12.8,
+  steerResponse: 9.5,
+  steerRelease: 12.5,
+  lowSpeedSteer: 2.6,
+  highSpeedSteer: 1.12,
+  offroadDrag: 4.8,
+  trackAssist: 4.6,
 };
 
 const CAMERA_CONFIG = {
-  distance: 7.1,
-  height: 3.2,
-  lookAhead: 6.5,
-  followSharpness: 5,
+  distance: 5.4,
+  height: 2.4,
+  lookAhead: 2.6,
+  lookHeight: 1.12,
+};
+
+const GAME_STATE = {
+  LOADING: "loading",
+  START: "start",
+  PLAYING: "playing",
+  PAUSED: "paused",
 };
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -46,7 +57,7 @@ scene.background = new THREE.Color("#8ec7ff");
 scene.fog = new THREE.Fog("#8ec7ff", 190, 360);
 
 const camera = new THREE.PerspectiveCamera(
-  56,
+  50,
   window.innerWidth / window.innerHeight,
   0.1,
   520,
@@ -55,10 +66,20 @@ const camera = new THREE.PerspectiveCamera(
 const loadingOverlay = document.querySelector("[data-loading]");
 const speedDisplay = document.querySelector("[data-speed]");
 const lapDisplay = document.querySelector("[data-lap]");
+const layoutDisplay = document.querySelector("[data-layout]");
+const lapBanner = document.querySelector("[data-lap-banner]");
+const lapBannerCount = document.querySelector("[data-lap-counter]");
+const lapStatus = document.querySelector("[data-lap-status]");
 const minimapCanvas = document.querySelector("[data-minimap]");
 const minimapContext = minimapCanvas.getContext("2d");
 const speedometerDial = document.querySelector("[data-speedometer-dial]");
 const speedometerNeedle = document.querySelector("[data-speedometer-needle]");
+const startScreen = document.querySelector("[data-start-screen]");
+const pauseMenu = document.querySelector("[data-pause-menu]");
+const startButton = document.querySelector("[data-start-button]");
+const resumeButton = document.querySelector("[data-resume-button]");
+const exitButton = document.querySelector("[data-exit-button]");
+const trackTitle = document.querySelector("[data-track-title]");
 const roadTextureUrl = new URL("./assets/road-texture.svg", import.meta.url).href;
 const grassTextureUrl = new URL("./assets/grass-texture.svg", import.meta.url).href;
 const mustangModelUrl = new URL("./assets/mustang-gt.glb", import.meta.url).href;
@@ -71,8 +92,6 @@ const tempVector = new THREE.Vector3();
 const tempVectorB = new THREE.Vector3();
 const tempForward = new THREE.Vector3();
 const tempRight = new THREE.Vector3();
-const tempCameraPosition = new THREE.Vector3();
-const tempCameraTarget = new THREE.Vector3();
 const dummy = new THREE.Object3D();
 
 const track = createTrackData();
@@ -81,6 +100,8 @@ minimapBaseCanvas.width = minimapCanvas.width;
 minimapBaseCanvas.height = minimapCanvas.height;
 
 const keys = new Set();
+let gameState = GAME_STATE.LOADING;
+let lapNoticeTimeout = 0;
 const car = {
   root: new THREE.Group(),
   visual: new THREE.Group(),
@@ -92,6 +113,7 @@ const car = {
   lapArmed: false,
   previousProgress: 0,
   onRoad: true,
+  isDrifting: false,
   trackInfo: {
     index: 0,
     point: new THREE.Vector3(),
@@ -102,6 +124,10 @@ const car = {
     progress: 0,
   },
 };
+
+document.body.dataset.gameState = gameState;
+layoutDisplay.textContent = track.layoutName;
+trackTitle.textContent = track.layoutName;
 
 car.root.add(car.visual);
 scene.add(car.root);
@@ -129,8 +155,8 @@ async function loadScene() {
   configureTexture(roadTexture, 1, 1);
   configureTexture(
     grassTexture,
-    Math.max(6, track.bounds.width / 24),
-    Math.max(6, track.bounds.height / 24),
+    Math.max(6, track.bounds.width / 26),
+    Math.max(6, track.bounds.height / 26),
   );
 
   roadMesh.material.map = roadTexture;
@@ -144,7 +170,8 @@ async function loadScene() {
 
   prepareModel(model);
   attachCarVisuals(model);
-  resetCar(true);
+  resetSession();
+  setGameState(GAME_STATE.START);
 
   loadingOverlay.classList.add("is-hidden");
   requestAnimationFrame(animate);
@@ -164,9 +191,10 @@ function setupTrack() {
     track.bounds.height + TRACK_MARGIN * 2,
   );
   const groundMaterial = new THREE.MeshStandardMaterial({
-    color: "#6e9f59",
+    color: "#5f8748",
     roughness: 1,
     metalness: 0,
+    side: THREE.DoubleSide,
   });
 
   groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
@@ -175,12 +203,13 @@ function setupTrack() {
   scene.add(groundMesh);
 
   const shoulderMesh = createTrackStrip(
-    TRACK_WIDTH * 0.5 + 6.8,
+    TRACK_WIDTH * 0.5 + 7.6,
     0.008,
     new THREE.MeshStandardMaterial({
-      color: "#698f55",
+      color: "#364834",
       roughness: 1,
       metalness: 0,
+      side: THREE.DoubleSide,
     }),
   );
 
@@ -188,9 +217,10 @@ function setupTrack() {
     TRACK_WIDTH * 0.5,
     0.02,
     new THREE.MeshStandardMaterial({
-      color: "#393f45",
+      color: "#0f1115",
       roughness: 1,
       metalness: 0,
+      side: THREE.DoubleSide,
     }),
   );
 
@@ -215,7 +245,7 @@ function setupScenery() {
     flatShading: true,
   });
 
-  const treeCount = 56;
+  const treeCount = 72;
   const trunks = new THREE.InstancedMesh(trunkGeometry, trunkMaterial, treeCount);
   const leaves = new THREE.InstancedMesh(leavesGeometry, leavesMaterial, treeCount);
 
@@ -225,9 +255,9 @@ function setupScenery() {
     const tangent = track.tangents[sampleIndex];
     const normal = track.normals[sampleIndex];
     const side = index % 2 === 0 ? 1 : -1;
-    const lateralOffset = TRACK_WIDTH * 0.5 + 10 + pseudoRandom(index + 19) * 20;
-    const tangentOffset = (pseudoRandom(index + 41) - 0.5) * 18;
-    const scale = 0.86 + pseudoRandom(index + 73) * 0.58;
+    const lateralOffset = TRACK_WIDTH * 0.5 + 14 + pseudoRandom(index + 19) * 32;
+    const tangentOffset = (pseudoRandom(index + 41) - 0.5) * 28;
+    const scale = 0.82 + pseudoRandom(index + 73) * 0.7;
 
     dummy.position
       .copy(basePoint)
@@ -247,9 +277,35 @@ function setupScenery() {
 }
 
 function setupEvents() {
+  startButton.addEventListener("click", startGame);
+  resumeButton.addEventListener("click", resumeGame);
+  exitButton.addEventListener("click", exitToStart);
+
   window.addEventListener("resize", onWindowResize);
 
   window.addEventListener("keydown", (event) => {
+    if (event.code === "Escape") {
+      event.preventDefault();
+
+      if (gameState === GAME_STATE.PLAYING) {
+        pauseGame();
+      } else if (gameState === GAME_STATE.PAUSED) {
+        resumeGame();
+      }
+
+      return;
+    }
+
+    if (gameState === GAME_STATE.START && event.code === "Enter") {
+      event.preventDefault();
+      startGame();
+      return;
+    }
+
+    if (gameState !== GAME_STATE.PLAYING) {
+      return;
+    }
+
     if (
       event.code === "Space" ||
       event.code.startsWith("Arrow") ||
@@ -274,7 +330,11 @@ function setupEvents() {
   });
 
   window.addEventListener("blur", () => {
-    keys.clear();
+    clearInputs();
+
+    if (gameState === GAME_STATE.PLAYING) {
+      pauseGame();
+    }
   });
 }
 
@@ -391,9 +451,12 @@ function animate() {
 
   const deltaTime = Math.min(clock.getDelta(), 0.05);
 
-  updateCar(deltaTime);
-  updateLapCounter();
-  updateCamera(deltaTime);
+  if (gameState === GAME_STATE.PLAYING) {
+    updateCar(deltaTime);
+    updateLapCounter();
+  }
+
+  updateCamera();
   updateHud();
 
   renderer.render(scene, camera);
@@ -454,33 +517,52 @@ function updateCar(deltaTime) {
   car.heading +=
     car.steer *
     steerStrength *
-    THREE.MathUtils.clamp(Math.abs(forwardSpeed) / 12, 0.16, 1) *
+    THREE.MathUtils.clamp(Math.abs(forwardSpeed) / 10, 0.18, 1) *
     directionSign *
     deltaTime;
+
+  const driftActive =
+    handbrake &&
+    car.onRoad &&
+    Math.abs(forwardSpeed) > CAR_CONFIG.driftMinSpeed &&
+    Math.abs(steerTarget) > 0.02;
+
+  if (driftActive) {
+    const driftFactor = THREE.MathUtils.clamp(
+      Math.abs(forwardSpeed) / CAR_CONFIG.maxForwardSpeed,
+      0.45,
+      1.2,
+    );
+
+    car.heading += steerTarget * CAR_CONFIG.driftYawBoost * driftFactor * deltaTime;
+  }
+
   car.root.rotation.y = car.heading;
 
   const lateralGrip = !car.onRoad
     ? CAR_CONFIG.offroadGrip
-    : handbrake
+    : driftActive
       ? CAR_CONFIG.handbrakeGrip
       : CAR_CONFIG.roadGrip;
-
-  // The car is still arcade-driven: forward speed and sideways slip are split
-  // in car space so grip can be tuned directly without a full wheel model.
   lateralSpeed = damp(lateralSpeed, 0, lateralGrip, deltaTime);
 
-  // Handbrake drift keeps some slip, but it is clamped and paired with track
-  // recovery so pressing Space does not launch the car off the road.
-  if (handbrake && car.onRoad && Math.abs(forwardSpeed) > 9 && Math.abs(car.steer) > 0.04) {
-    lateralSpeed += car.steer * Math.abs(forwardSpeed) * CAR_CONFIG.driftSlipBoost * deltaTime;
+  if (driftActive) {
+    lateralSpeed +=
+      steerTarget *
+      (CAR_CONFIG.driftSlipBase + Math.abs(forwardSpeed) * CAR_CONFIG.driftSlipBoost);
     lateralSpeed = THREE.MathUtils.clamp(
       lateralSpeed,
       -CAR_CONFIG.maxDriftLateral,
       CAR_CONFIG.maxDriftLateral,
     );
-    forwardSpeed = damp(forwardSpeed, forwardSpeed * 0.9, 6.5, deltaTime);
+    forwardSpeed = damp(
+      forwardSpeed,
+      forwardSpeed * 0.82,
+      CAR_CONFIG.driftForwardLoss,
+      deltaTime,
+    );
   } else {
-    lateralSpeed += car.steer * Math.abs(forwardSpeed) * 0.2 * deltaTime;
+    lateralSpeed += car.steer * Math.abs(forwardSpeed) * 0.15 * deltaTime;
   }
 
   forwardSpeed = THREE.MathUtils.clamp(
@@ -488,6 +570,8 @@ function updateCar(deltaTime) {
     -CAR_CONFIG.maxReverseSpeed,
     CAR_CONFIG.maxForwardSpeed,
   );
+
+  car.isDrifting = driftActive && Math.abs(lateralSpeed) > 1.1;
 
   const nextForward = getForwardVector(car.heading, tempForward);
   const nextRight = getRightVector(car.heading, tempRight);
@@ -499,15 +583,19 @@ function updateCar(deltaTime) {
 
   if (car.onRoad) {
     const edgeFactor = THREE.MathUtils.clamp(
-      (car.trackInfo.distance - TRACK_WIDTH * 0.18) / (TRACK_WIDTH * 0.38),
+      (car.trackInfo.distance - TRACK_WIDTH * 0.18) / (TRACK_WIDTH * 0.4),
       0,
       1,
     );
 
     if (edgeFactor > 0) {
+      const assistStrength = car.isDrifting
+        ? CAR_CONFIG.trackAssist * 0.28
+        : CAR_CONFIG.trackAssist;
+
       car.velocity.addScaledVector(
         car.trackInfo.toCenter,
-        CAR_CONFIG.trackAssist * (handbrake ? 1.05 : 1) * edgeFactor * deltaTime,
+        assistStrength * edgeFactor * deltaTime,
       );
     }
   }
@@ -525,36 +613,30 @@ function updateCar(deltaTime) {
 
   car.visual.rotation.z = damp(
     car.visual.rotation.z,
-    THREE.MathUtils.clamp(-car.steer * 0.08 - lateralSpeed * 0.018, -0.11, 0.11),
+    THREE.MathUtils.clamp(-car.steer * 0.11 - lateralSpeed * 0.024, -0.16, 0.16),
     8,
     deltaTime,
   );
   car.visual.rotation.x = damp(
     car.visual.rotation.x,
-    THREE.MathUtils.clamp(forwardSpeed * -0.002, -0.045, 0.02),
+    THREE.MathUtils.clamp(forwardSpeed * -0.0022, -0.05, 0.02),
     7,
     deltaTime,
   );
 }
 
-function updateCamera(deltaTime) {
+function updateCamera() {
   const forward = getForwardVector(car.heading, tempForward);
 
-  const desiredPosition = tempCameraPosition
+  camera.position
     .copy(car.root.position)
-    .addScaledVector(forward, -CAMERA_CONFIG.distance)
-    .setY(CAMERA_CONFIG.height);
+    .addScaledVector(forward, -CAMERA_CONFIG.distance);
+  camera.position.y = CAMERA_CONFIG.height;
 
-  const desiredLookTarget = tempCameraTarget
+  cameraLookTarget
     .copy(car.root.position)
-    .addScaledVector(forward, CAMERA_CONFIG.lookAhead)
-    .setY(1.3);
-
-  // Keep one stable chase framing at all speeds so the car reads the same
-  // whether stationary, accelerating, or drifting through a corner.
-  const cameraBlend = 1 - Math.exp(-CAMERA_CONFIG.followSharpness * deltaTime);
-  camera.position.lerp(desiredPosition, cameraBlend);
-  cameraLookTarget.lerp(desiredLookTarget, cameraBlend);
+    .addScaledVector(forward, CAMERA_CONFIG.lookAhead);
+  cameraLookTarget.y = CAMERA_CONFIG.lookHeight;
   camera.lookAt(cameraLookTarget);
 }
 
@@ -562,7 +644,7 @@ function updateLapCounter() {
   const progress = car.trackInfo.progress;
   const movingForward = car.velocity.dot(car.trackInfo.tangent) > 2;
 
-  if (progress > 0.35) {
+  if (progress > 0.3) {
     car.lapArmed = true;
   }
 
@@ -574,6 +656,7 @@ function updateLapCounter() {
   ) {
     car.laps += 1;
     car.lapArmed = false;
+    announceLapComplete();
   }
 
   car.previousProgress = progress;
@@ -586,10 +669,85 @@ function updateHud() {
 
   speedDisplay.textContent = String(mph);
   lapDisplay.textContent = String(car.laps);
+  lapBannerCount.textContent = String(car.laps);
   speedometerDial.style.setProperty("--speed-progress", `${normalizedSpeed * 240}deg`);
   speedometerNeedle.style.transform = `translateX(-50%) rotate(${needleAngle}deg)`;
 
   renderMinimap();
+}
+
+function startGame() {
+  if (gameState === GAME_STATE.LOADING) {
+    return;
+  }
+
+  resetSession();
+  setLapStatus("Lap 0 started. Cross the stripe to bank your first lap.");
+  setGameState(GAME_STATE.PLAYING);
+}
+
+function pauseGame() {
+  if (gameState !== GAME_STATE.PLAYING) {
+    return;
+  }
+
+  clearInputs();
+  setGameState(GAME_STATE.PAUSED);
+}
+
+function resumeGame() {
+  if (gameState !== GAME_STATE.PAUSED) {
+    return;
+  }
+
+  clearInputs();
+  setGameState(GAME_STATE.PLAYING);
+}
+
+function exitToStart() {
+  clearInputs();
+  resetSession();
+  setLapStatus("Press Start Game to begin a fresh run.");
+  setGameState(GAME_STATE.START);
+}
+
+function setGameState(nextState) {
+  gameState = nextState;
+  document.body.dataset.gameState = nextState;
+
+  startScreen.classList.toggle("is-hidden", nextState !== GAME_STATE.START);
+  pauseMenu.classList.toggle("is-hidden", nextState !== GAME_STATE.PAUSED);
+
+  clock.getDelta();
+}
+
+function setLapStatus(text) {
+  lapStatus.textContent = text;
+}
+
+function announceLapComplete() {
+  const lapLabel = car.laps === 1 ? "1 lap completed." : `${car.laps} laps completed.`;
+
+  setLapStatus(lapLabel);
+  lapBanner.classList.remove("is-popping");
+  void lapBanner.offsetWidth;
+  lapBanner.classList.add("is-popping");
+
+  clearTimeout(lapNoticeTimeout);
+  lapNoticeTimeout = window.setTimeout(() => {
+    lapBanner.classList.remove("is-popping");
+    setLapStatus("Keep pushing. Cross the stripe again to add another lap.");
+  }, 1700);
+}
+
+function clearInputs() {
+  keys.clear();
+}
+
+function resetSession() {
+  clearTimeout(lapNoticeTimeout);
+  lapBanner.classList.remove("is-popping");
+  resetCar(true);
 }
 
 function resetCar(initialReset = false) {
@@ -598,6 +756,7 @@ function resetCar(initialReset = false) {
   car.heading = Math.atan2(track.startTangent.x, track.startTangent.z);
   car.root.rotation.y = car.heading;
   car.steer = 0;
+  car.isDrifting = false;
   car.visual.rotation.set(0, 0, 0);
   updateTrackInfo(car.trackInfo, car.root.position);
   car.previousProgress = car.trackInfo.progress;
@@ -607,32 +766,42 @@ function resetCar(initialReset = false) {
     car.laps = 0;
   }
 
-  updateCamera(1 / 60);
+  updateCamera();
   updateHud();
 }
 
 function createTrackData() {
-  const controlPoints = [];
-  const controlCount = 16;
+  const controlPoints = [
+    [-110, 182],
+    [-18, 194],
+    [82, 184],
+    [168, 140],
+    [214, 72],
+    [220, -10],
+    [190, -86],
+    [126, -146],
+    [42, -180],
+    [-48, -186],
+    [-132, -158],
+    [-198, -100],
+    [-228, -20],
+    [-214, 68],
+    [-164, 136],
+    [-90, 168],
+    [-18, 148],
+    [34, 108],
+    [78, 60],
+    [126, 38],
+    [156, 82],
+    [138, 138],
+    [72, 150],
+    [12, 118],
+    [-54, 82],
+    [-122, 94],
+    [-158, 146],
+  ].map(([x, z]) => new THREE.Vector3(x, 0, z));
 
-  for (let index = 0; index < controlCount; index += 1) {
-    const angle = (index / controlCount) * TAU;
-    const radial = 112 + (pseudoRandom(index + 17) - 0.5) * 44;
-    const xStretch = 1.28 + (pseudoRandom(index + 41) - 0.5) * 0.16;
-    const zStretch = 0.96 + (pseudoRandom(index + 73) - 0.5) * 0.22;
-    const waveX = Math.sin(angle * 2.5 + 0.4) * 18;
-    const waveZ = Math.cos(angle * 3.2 - 0.6) * 14;
-
-    controlPoints.push(
-      new THREE.Vector3(
-        Math.cos(angle) * radial * xStretch + waveX,
-        0,
-        Math.sin(angle) * radial * zStretch + waveZ,
-      ),
-    );
-  }
-
-  const curve = new THREE.CatmullRomCurve3(controlPoints, true, "catmullrom", 0.42);
+  const curve = new THREE.CatmullRomCurve3(controlPoints, true, "catmullrom", 0.32);
   const rawSamples = [];
   const rawTangents = [];
   const rawNormals = [];
@@ -664,9 +833,8 @@ function createTrackData() {
     lengths.push(totalLength);
   }
 
-  const bounds = getTrackBounds(samples);
-
   return {
+    layoutName: "Switchback Circuit",
     samples,
     tangents,
     normals,
@@ -675,7 +843,7 @@ function createTrackData() {
     lengths,
     totalLength,
     progresses: lengths.slice(0, -1).map((length) => length / totalLength),
-    bounds,
+    bounds: getTrackBounds(samples),
     startPoint: samples[0].clone(),
     startTangent: tangents[0].clone(),
     startNormal: normals[0].clone(),
@@ -704,7 +872,7 @@ function createTrackStrip(halfWidth, y, material) {
 
   for (let index = 0; index < track.closedSamples.length - 1; index += 1) {
     const base = index * 2;
-    indices.push(base, base + 1, base + 2, base + 1, base + 3, base + 2);
+    indices.push(base, base + 2, base + 1, base + 1, base + 2, base + 3);
   }
 
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
@@ -732,7 +900,7 @@ function createEdgeLine(offset, color) {
 function createCenterGuideLine() {
   const points = [];
 
-  for (let index = 0; index < track.samples.length; index += 8) {
+  for (let index = 0; index < track.samples.length; index += 7) {
     const point = track.samples[index];
     points.push(point.clone().setY(0.055));
   }
@@ -752,8 +920,12 @@ function createCenterGuideLine() {
 function createStartLine() {
   const texture = createStartLineTexture();
   const startLine = new THREE.Mesh(
-    new THREE.PlaneGeometry(TRACK_WIDTH - 1.3, 3.6),
-    new THREE.MeshBasicMaterial({ map: texture, transparent: true }),
+    new THREE.PlaneGeometry(TRACK_WIDTH - 1.3, 3.8),
+    new THREE.MeshBasicMaterial({
+      map: texture,
+      transparent: true,
+      side: THREE.DoubleSide,
+    }),
   );
 
   startLine.rotation.x = -Math.PI * 0.5;
@@ -807,9 +979,9 @@ function prepareMinimap() {
   context.fillStyle = "#12222c";
   context.fillRect(0, 0, width, height);
 
-  drawTrackPath(context, TRACK_WIDTH * 1.3, "#5f7d4f");
-  drawTrackPath(context, TRACK_WIDTH * 0.82, "#374047");
-  drawTrackPath(context, TRACK_WIDTH * 0.08, "rgba(255, 255, 255, 0.16)");
+  drawTrackPath(context, TRACK_WIDTH * 1.32, "#47613b");
+  drawTrackPath(context, TRACK_WIDTH * 0.9, "#090b0f");
+  drawTrackPath(context, TRACK_WIDTH * 0.08, "rgba(255, 255, 255, 0.14)");
 
   const startLeft = track.startPoint
     .clone()
@@ -918,10 +1090,10 @@ function pickStartIndex(tangents) {
   let bestScore = Infinity;
 
   for (let index = 0; index < tangents.length; index += 1) {
-    const previous = tangents[(index - 10 + tangents.length) % tangents.length];
-    const next = tangents[(index + 10) % tangents.length];
+    const previous = tangents[(index - 12 + tangents.length) % tangents.length];
+    const next = tangents[(index + 12) % tangents.length];
     const bendScore = 1 - THREE.MathUtils.clamp(previous.dot(next), -1, 1);
-    const forwardPenalty = tangents[index].z < 0.15 ? 0.12 : 0;
+    const forwardPenalty = tangents[index].z < 0.22 ? 0.16 : 0;
     const score = bendScore + forwardPenalty;
 
     if (score < bestScore) {

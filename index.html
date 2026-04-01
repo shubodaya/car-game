@@ -32,10 +32,18 @@
           </div>
           <div>
             <span class="hud__mini-label">Layout</span>
-            <strong class="hud__mini-value">Curved Loop</strong>
+            <strong class="hud__mini-value" data-layout>Switchback Circuit</strong>
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="lap-banner" data-lap-banner>
+      <span class="lap-banner__eyebrow">Completed Laps</span>
+      <strong class="lap-banner__count" data-lap-counter>0</strong>
+      <span class="lap-banner__status" data-lap-status>
+        Cross the stripe to bank your first lap.
+      </span>
     </div>
 
     <div class="hud hud--right">
@@ -66,8 +74,49 @@
           <br />
           Space handbrake drift
           <br />
+          Esc pause menu
+          <br />
           R reset
         </strong>
+      </div>
+    </div>
+
+    <div class="menu-screen is-hidden" data-start-screen>
+      <div class="menu-screen__panel">
+        <span class="menu-screen__eyebrow">Three.js Arcade Drive</span>
+        <strong class="menu-screen__title" data-track-title>Switchback Circuit</strong>
+        <p class="menu-screen__copy">
+          Start the lap from zero, stay on the asphalt, and use Space to throw the
+          Mustang sideways through the tighter corners. Press Escape any time to
+          pause, resume, or exit back here.
+        </p>
+        <div class="menu-screen__actions">
+          <button class="menu-screen__button" type="button" data-start-button>
+            Start Game
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="menu-screen menu-screen--pause is-hidden" data-pause-menu>
+      <div class="menu-screen__panel menu-screen__panel--compact">
+        <span class="menu-screen__eyebrow">Session Paused</span>
+        <strong class="menu-screen__title">Resume Or Exit</strong>
+        <p class="menu-screen__copy">
+          Continue the current lap or leave the run and go back to the start screen.
+        </p>
+        <div class="menu-screen__actions">
+          <button class="menu-screen__button" type="button" data-resume-button>
+            Resume
+          </button>
+          <button
+            class="menu-screen__button menu-screen__button--ghost"
+            type="button"
+            data-exit-button
+          >
+            Exit
+          </button>
+        </div>
       </div>
     </div>
 
