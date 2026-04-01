@@ -447,6 +447,54 @@ canvas {
     0 0 0 1px rgba(255, 200, 87, 0.16);
 }
 
+.touch-controls {
+  grid-template-columns: repeat(3, 60px);
+  grid-template-areas:
+    ". up ."
+    "left down right";
+  justify-items: center;
+}
+
+.touch-controls__button {
+  width: 60px;
+}
+
+.touch-controls__button strong {
+  display: none;
+}
+
+.touch-controls__button--left {
+  grid-area: left;
+}
+
+.touch-controls__button--left span::before {
+  content: "\2190";
+}
+
+.touch-controls__button--up {
+  grid-area: up;
+}
+
+.touch-controls__button--up span::before {
+  content: "\2191";
+}
+
+.touch-controls__button--right {
+  grid-area: right;
+}
+
+.touch-controls__button--right span::before {
+  content: "\2192";
+}
+
+.touch-controls__button--down {
+  grid-area: down;
+}
+
+.touch-controls__button--down span::before {
+  content: "\2193";
+}
+
 .menu-screen,
 .loading {
   position: fixed;
@@ -717,5 +765,29 @@ body[data-game-state="paused"] .touch-controls {
 
   .touch-controls__button span {
     font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 820px) {
+  .touch-controls {
+    grid-template-columns: repeat(3, 56px);
+  }
+
+  .touch-controls__button {
+    width: 56px;
+  }
+}
+
+@media (max-width: 520px) {
+  .touch-controls {
+    grid-template-columns: repeat(3, 52px);
+  }
+
+  .touch-controls__button {
+    width: 52px;
+  }
+
+  .touch-controls__button span {
+    font-size: 0;
   }
 }
