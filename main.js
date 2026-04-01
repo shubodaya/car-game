@@ -71,6 +71,9 @@ const CAMERA_CONFIG = {
   lookAhead: 2.15,
   lookHeight: 0.98,
 };
+const ROAD_DASH_LENGTH = 7.4;
+const ROAD_DASH_GAP = 9.2;
+const ROAD_DASH_WIDTH = 0.5;
 
 const GAME_STATE = {
   LOADING: "loading",
@@ -259,11 +262,7 @@ function setupTrack() {
     }),
   );
 
-  scene.add(shoulderMesh, roadMesh);
-  scene.add(createEdgeLine(TRACK_WIDTH * 0.5 - 0.8, "#f5ecd1"));
-  scene.add(createEdgeLine(-(TRACK_WIDTH * 0.5 - 0.8), "#f5ecd1"));
-  scene.add(createCenterGuideLine());
-  scene.add(createStartArch());
+  scene.add(shoulderMesh, roadMesh, createRoadDashMarkers(), createStartArch());
 
   prepareMinimap();
 }
@@ -965,6 +964,38 @@ function createCenterGuideLine() {
       opacity: 0.16,
     }),
   );
+}
+
+function createRoadDashMarkers() {
+  const dashStep = Math.max(1, Math.round((ROAD_DASH_LENGTH + ROAD_DASH_GAP) / (track.totalLength / track.samples.length)));
+  const dashIndices = [];
+
+  for (let sampleIndex = dashStep; sampleIndex < track.samples.length - dashStep; sampleIndex += dashStep) {
+    dashIndices.push(sampleIndex);
+  }
+
+  const dashes = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(ROAD_DASH_WIDTH, 0.03, ROAD_DASH_LENGTH),
+    new THREE.MeshStandardMaterial({
+      color: "#f4efe2",
+      roughness: 0.44,
+      metalness: 0.02,
+    }),
+    dashIndices.length,
+  );
+
+  dashIndices.forEach((sampleIndex, index) => {
+    const point = track.samples[sampleIndex];
+    const tangent = track.tangents[sampleIndex];
+
+    dummy.position.copy(point).setY(0.046);
+    dummy.rotation.set(0, Math.atan2(tangent.x, tangent.z), 0);
+    dummy.scale.set(1, 1, 1);
+    dummy.updateMatrix();
+    dashes.setMatrixAt(index, dummy.matrix);
+  });
+
+  return dashes;
 }
 
 function createStartArch() {

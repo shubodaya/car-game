@@ -129,6 +129,91 @@ canvas {
   font-weight: 600;
 }
 
+.control-guide {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.control-guide__keys {
+  display: flex;
+  flex-direction: column;
+  gap: 0.34rem;
+}
+
+.control-guide__row {
+  display: flex;
+  gap: 0.34rem;
+}
+
+.control-guide__row--top {
+  justify-content: center;
+}
+
+.control-keycap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 1.85rem;
+  border: 2px solid rgba(246, 250, 255, 0.84);
+  border-radius: 0.62rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(180, 194, 209, 0.05));
+  color: var(--value);
+  font-size: 0.92rem;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow:
+    inset 0 -3px 0 rgba(255, 255, 255, 0.08),
+    0 10px 18px rgba(4, 10, 14, 0.16);
+}
+
+.control-keycap::after {
+  content: "";
+  position: absolute;
+  left: 0.26rem;
+  right: 0.26rem;
+  bottom: -0.38rem;
+  height: 0.32rem;
+  border: 2px solid rgba(246, 250, 255, 0.76);
+  border-top: 0;
+  border-radius: 0 0 0.45rem 0.45rem;
+}
+
+.control-guide__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+}
+
+.control-guide__meta p {
+  display: flex;
+  gap: 0.38rem;
+  align-items: center;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.control-guide__pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.4rem;
+  padding: 0.18rem 0.38rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--value);
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .hud__stats {
   display: flex;
   justify-content: space-between;
@@ -315,9 +400,36 @@ canvas {
 }
 
 .touch-controls__button span {
-  font-size: 1.25rem;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  font-size: 0;
   line-height: 1;
   color: #9ed8ff;
+}
+
+.touch-controls__button span::before {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.touch-controls__button:nth-child(1) span::before {
+  content: "←";
+}
+
+.touch-controls__button:nth-child(2) span::before {
+  content: "↑";
+}
+
+.touch-controls__button:nth-child(3) span::before {
+  content: "→";
+}
+
+.touch-controls__button:nth-child(4) span::before {
+  content: "↓";
 }
 
 .touch-controls__button strong {
@@ -522,6 +634,20 @@ body[data-game-state="paused"] .touch-controls {
 
   .hud__card--wide {
     width: 208px;
+  }
+
+  .control-guide {
+    gap: 0.55rem;
+  }
+
+  .control-keycap {
+    width: 1.72rem;
+    height: 1.6rem;
+    font-size: 0.8rem;
+  }
+
+  .control-guide__meta p {
+    font-size: 0.56rem;
   }
 
   .lap-banner {
