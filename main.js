@@ -117,7 +117,10 @@ const startButton = document.querySelector("[data-start-button]");
 const resumeButton = document.querySelector("[data-resume-button]");
 const exitButton = document.querySelector("[data-exit-button]");
 const trackTitle = document.querySelector("[data-track-title]");
-const touchButtons = Array.from(document.querySelectorAll("[data-touch-key]"));
+const touchButtons = Array.from(document.querySelectorAll("[data-touch-control]"));
+const touchButtonMap = new Map(
+  touchButtons.map((button) => [button.dataset.touchControl, button]),
+);
 const roadTextureUrl = new URL("./assets/road-texture.svg", import.meta.url).href;
 const grassTextureUrl = new URL("./assets/grass-texture.svg", import.meta.url).href;
 const mustangModelUrl = new URL("./assets/mustang-gt.glb", import.meta.url).href;
@@ -138,6 +141,13 @@ minimapBaseCanvas.width = minimapCanvas.width;
 minimapBaseCanvas.height = minimapCanvas.height;
 
 const keys = new Set();
+const touchDriveState = {
+  accelerate: false,
+  brake: false,
+  left: false,
+  right: false,
+  handbrake: false,
+};
 let gameState = GAME_STATE.LOADING;
 let lapNoticeTimeout = 0;
 const car = {
@@ -372,19 +382,23 @@ function setupEvents() {
   });
 
   touchButtons.forEach((button) => {
-    const keyCode = button.dataset.touchKey;
+    const control = button.dataset.touchControl;
+    const mode = button.dataset.touchMode ?? "hold";
 
-    if (!keyCode) {
+    if (!control || !(control in touchDriveState)) {
       return;
     }
 
-    const releaseTouchKey = (event) => {
+    const releaseTouchControl = (event) => {
       if (event) {
         event.preventDefault();
       }
 
-      keys.delete(keyCode);
-      button.classList.remove("is-active");
+      if (mode === "toggle") {
+        return;
+      }
+
+      setTouchControlState(control, false);
     };
 
     button.addEventListener(
@@ -402,12 +416,26 @@ function setupEvents() {
         return;
       }
 
-      keys.add(keyCode);
-      button.classList.add("is-active");
+      if (mode === "toggle") {
+        const nextValue = !touchDriveState[control];
+
+        if (control === "accelerate" && nextValue) {
+          setTouchControlState("brake", false);
+        }
+
+        setTouchControlState(control, nextValue);
+        return;
+      }
+
+      if (control === "brake") {
+        setTouchControlState("accelerate", false);
+      }
+
+      setTouchControlState(control, true);
     });
-    button.addEventListener("pointerup", releaseTouchKey);
-    button.addEventListener("pointercancel", releaseTouchKey);
-    button.addEventListener("pointerleave", releaseTouchKey);
+    button.addEventListener("pointerup", releaseTouchControl);
+    button.addEventListener("pointercancel", releaseTouchControl);
+    button.addEventListener("pointerleave", releaseTouchControl);
     button.addEventListener("contextmenu", (event) => event.preventDefault());
   });
 }
@@ -541,9 +569,10 @@ function updateCar(deltaTime) {
   car.onRoad = car.trackInfo.distance < TRACK_WIDTH * 0.58;
 
   const steerTarget = getSteerInput();
-  const accelerate = keys.has("KeyW") || keys.has("ArrowUp");
-  const brake = keys.has("KeyS") || keys.has("ArrowDown");
-  const handbrake = keys.has("Space");
+  const accelerate =
+    keys.has("KeyW") || keys.has("ArrowUp") || (touchDriveState.accelerate && !touchDriveState.brake);
+  const brake = keys.has("KeyS") || keys.has("ArrowDown") || touchDriveState.brake;
+  const handbrake = keys.has("Space") || touchDriveState.handbrake;
 
   car.steer = damp(
     car.steer,
@@ -816,7 +845,9 @@ function announceLapComplete() {
 
 function clearInputs() {
   keys.clear();
-  touchButtons.forEach((button) => button.classList.remove("is-active"));
+  Object.keys(touchDriveState).forEach((control) => {
+    setTouchControlState(control, false);
+  });
 }
 
 function resetSession() {
@@ -1277,9 +1308,24 @@ function configureTexture(texture, repeatX, repeatY) {
   texture.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 4);
 }
 
+function setTouchControlState(control, nextValue) {
+  if (!(control in touchDriveState)) {
+    return;
+  }
+
+  touchDriveState[control] = nextValue;
+
+  const button = touchButtonMap.get(control);
+
+  if (button) {
+    button.classList.toggle("is-active", nextValue);
+    button.setAttribute("aria-pressed", String(nextValue));
+  }
+}
+
 function getSteerInput() {
-  const left = keys.has("KeyA") || keys.has("ArrowLeft");
-  const right = keys.has("KeyD") || keys.has("ArrowRight");
+  const left = keys.has("KeyA") || keys.has("ArrowLeft") || touchDriveState.left;
+  const right = keys.has("KeyD") || keys.has("ArrowRight") || touchDriveState.right;
 
   if (left === right) {
     return 0;

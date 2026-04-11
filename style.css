@@ -372,20 +372,40 @@ canvas {
 
 .touch-controls {
   position: fixed;
-  left: 1rem;
-  bottom: 1rem;
+  inset: 0;
   z-index: 14;
   display: none;
-  grid-template-columns: repeat(2, 68px);
+  pointer-events: none;
+}
+
+.touch-controls__column {
+  position: absolute;
+  display: grid;
   gap: 8px;
   pointer-events: none;
 }
 
+.touch-controls__column--left {
+  left: 1rem;
+  bottom: 1rem;
+  justify-items: start;
+}
+
+.touch-controls__column--right {
+  right: 1rem;
+  bottom: 11rem;
+  justify-items: end;
+}
+
 .touch-controls__button {
-  min-height: 60px;
-  padding: 0.55rem 0.45rem;
+  display: grid;
+  justify-items: center;
+  gap: 0.28rem;
+  width: 72px;
+  min-height: 62px;
+  padding: 0.5rem 0.42rem;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 16px;
+  border-radius: 8px;
   background: rgba(7, 22, 33, 0.46);
   color: var(--value);
   backdrop-filter: blur(10px);
@@ -404,15 +424,15 @@ canvas {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.3rem;
+  height: 1.3rem;
   font-size: 0;
   line-height: 1;
   color: #9ed8ff;
 }
 
 .touch-controls__button span::before {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   line-height: 1;
 }
 
@@ -434,8 +454,9 @@ canvas {
 
 .touch-controls__button strong {
   margin-top: 0.18rem;
-  font-size: 0.62rem;
-  letter-spacing: 0.1em;
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  line-height: 1.15;
   text-transform: uppercase;
 }
 
@@ -447,52 +468,32 @@ canvas {
     0 0 0 1px rgba(255, 200, 87, 0.16);
 }
 
-.touch-controls {
-  grid-template-columns: repeat(3, 60px);
-  grid-template-areas:
-    ". up ."
-    "left down right";
-  justify-items: center;
-}
-
 .touch-controls__button {
-  width: 60px;
+  width: 72px;
 }
 
 .touch-controls__button strong {
-  display: none;
+  display: block;
 }
 
-.touch-controls__button--left {
-  grid-area: left;
+.touch-controls__column--left .touch-controls__button--accelerate span::before {
+  content: "\25b2";
 }
 
-.touch-controls__button--left span::before {
+.touch-controls__column--left .touch-controls__button--left span::before {
   content: "\2190";
 }
 
-.touch-controls__button--up {
-  grid-area: up;
+.touch-controls__column--right .touch-controls__button--drift span::before {
+  content: "~";
 }
 
-.touch-controls__button--up span::before {
-  content: "\2191";
-}
-
-.touch-controls__button--right {
-  grid-area: right;
-}
-
-.touch-controls__button--right span::before {
+.touch-controls__column--right .touch-controls__button--right span::before {
   content: "\2192";
 }
 
-.touch-controls__button--down {
-  grid-area: down;
-}
-
-.touch-controls__button--down span::before {
-  content: "\2193";
+.touch-controls__column--right .touch-controls__button--brake span::before {
+  content: "\25bc";
 }
 
 .menu-screen,
@@ -728,7 +729,7 @@ body[data-game-state="paused"] .touch-controls {
   }
 
   .touch-controls {
-    display: grid;
+    display: block;
   }
 }
 
@@ -779,42 +780,47 @@ body[data-game-state="paused"] .touch-controls {
   }
 
   .touch-controls {
+    display: block;
+  }
+
+  .touch-controls__column--left {
     left: 0.7rem;
     bottom: 0.7rem;
-    grid-template-columns: repeat(2, 60px);
-    gap: 7px;
+  }
+
+  .touch-controls__column--right {
+    right: 0.7rem;
+    bottom: 9.3rem;
   }
 
   .touch-controls__button {
+    width: 60px;
     min-height: 54px;
-    border-radius: 14px;
   }
 
-  .touch-controls__button span {
-    font-size: 1.1rem;
+  .touch-controls__button strong {
+    font-size: 0.54rem;
   }
 }
 
 @media (max-width: 820px) {
-  .touch-controls {
-    grid-template-columns: repeat(3, 56px);
+  .touch-controls__button {
+    width: 64px;
+    min-height: 58px;
   }
 
-  .touch-controls__button {
-    width: 56px;
+  .touch-controls__column--right {
+    bottom: 10rem;
   }
 }
 
 @media (max-width: 520px) {
-  .touch-controls {
-    grid-template-columns: repeat(3, 52px);
-  }
-
   .touch-controls__button {
-    width: 52px;
+    width: 60px;
+    min-height: 54px;
   }
 
-  .touch-controls__button span {
-    font-size: 0;
+  .touch-controls__column--right {
+    bottom: 9.3rem;
   }
 }

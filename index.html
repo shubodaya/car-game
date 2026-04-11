@@ -86,22 +86,61 @@
     </div>
 
     <div class="touch-controls" aria-label="Touch drive controls">
-      <button class="touch-controls__button touch-controls__button--left" type="button" data-touch-key="KeyA" aria-label="Steer left">
-        <span aria-hidden="true">←</span>
-        <strong>Left</strong>
-      </button>
-      <button class="touch-controls__button touch-controls__button--up" type="button" data-touch-key="KeyW" aria-label="Accelerate">
-        <span aria-hidden="true">↑</span>
-        <strong>Go</strong>
-      </button>
-      <button class="touch-controls__button touch-controls__button--right" type="button" data-touch-key="KeyD" aria-label="Steer right">
-        <span aria-hidden="true">→</span>
-        <strong>Right</strong>
-      </button>
-      <button class="touch-controls__button touch-controls__button--down" type="button" data-touch-key="KeyS" aria-label="Brake">
-        <span aria-hidden="true">↓</span>
-        <strong>Brake</strong>
-      </button>
+      <div class="touch-controls__column touch-controls__column--left">
+        <button
+          class="touch-controls__button touch-controls__button--accelerate"
+          type="button"
+          data-touch-control="accelerate"
+          data-touch-mode="toggle"
+          aria-label="Toggle acceleration"
+          aria-pressed="false"
+        >
+          <span aria-hidden="true"></span>
+          <strong>Accel</strong>
+        </button>
+        <button
+          class="touch-controls__button touch-controls__button--left"
+          type="button"
+          data-touch-control="left"
+          aria-label="Steer left"
+          aria-pressed="false"
+        >
+          <span aria-hidden="true"></span>
+          <strong>Left</strong>
+        </button>
+      </div>
+      <div class="touch-controls__column touch-controls__column--right">
+        <button
+          class="touch-controls__button touch-controls__button--drift"
+          type="button"
+          data-touch-control="handbrake"
+          aria-label="Drift"
+          aria-pressed="false"
+        >
+          <span aria-hidden="true"></span>
+          <strong>Drift</strong>
+        </button>
+        <button
+          class="touch-controls__button touch-controls__button--right"
+          type="button"
+          data-touch-control="right"
+          aria-label="Steer right"
+          aria-pressed="false"
+        >
+          <span aria-hidden="true"></span>
+          <strong>Right</strong>
+        </button>
+        <button
+          class="touch-controls__button touch-controls__button--brake"
+          type="button"
+          data-touch-control="brake"
+          aria-label="Brake"
+          aria-pressed="false"
+        >
+          <span aria-hidden="true"></span>
+          <strong>Brake</strong>
+        </button>
+      </div>
     </div>
 
     <div class="menu-screen is-hidden" data-start-screen>
