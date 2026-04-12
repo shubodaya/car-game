@@ -265,7 +265,7 @@ function setupTrack() {
     TRACK_WIDTH * 0.5,
     0.02,
     new THREE.MeshStandardMaterial({
-      color: "#5a5e63",
+      color: "#7a7f85",
       roughness: 1,
       metalness: 0,
       side: THREE.DoubleSide,
@@ -1137,7 +1137,7 @@ function prepareMinimap() {
   context.fillRect(0, 0, width, height);
 
   drawTrackPath(context, TRACK_WIDTH * 1.32, "#47613b");
-  drawTrackPath(context, TRACK_WIDTH * 0.9, "#52575d");
+  drawTrackPath(context, TRACK_WIDTH * 0.9, "#6f757b");
   drawTrackPath(context, TRACK_WIDTH * 0.08, "rgba(255, 255, 255, 0.14)");
 
   const startLeft = track.startPoint
