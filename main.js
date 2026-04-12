@@ -265,7 +265,7 @@ function setupTrack() {
     TRACK_WIDTH * 0.5,
     0.02,
     new THREE.MeshStandardMaterial({
-      color: "#A9A9A9",
+      color: "#ffffff",
       roughness: 1,
       metalness: 0,
       side: THREE.DoubleSide,
