@@ -379,25 +379,11 @@ canvas {
 }
 
 .touch-controls__column {
-  position: absolute;
-  display: grid;
-  gap: 8px;
-  pointer-events: none;
-}
-
-.touch-controls__column--left {
-  left: 1rem;
-  bottom: 1rem;
-  justify-items: start;
-}
-
-.touch-controls__column--right {
-  right: 1rem;
-  bottom: 11rem;
-  justify-items: end;
+  display: contents;
 }
 
 .touch-controls__button {
+  position: absolute;
   display: grid;
   justify-items: center;
   gap: 0.28rem;
@@ -476,20 +462,45 @@ canvas {
   display: block;
 }
 
+.touch-controls__button--accelerate {
+  left: 1rem;
+  bottom: 1rem;
+}
+
 .touch-controls__column--left .touch-controls__button--accelerate span::before {
   content: "\25b2";
+}
+
+.touch-controls__button--left {
+  left: calc(50% - 78px);
+  bottom: 5.6rem;
 }
 
 .touch-controls__column--left .touch-controls__button--left span::before {
   content: "\2190";
 }
 
+.touch-controls__button--drift {
+  right: 1rem;
+  bottom: 10.2rem;
+}
+
 .touch-controls__column--right .touch-controls__button--drift span::before {
   content: "~";
 }
 
+.touch-controls__button--right {
+  left: calc(50% + 6px);
+  bottom: 5.6rem;
+}
+
 .touch-controls__column--right .touch-controls__button--right span::before {
   content: "\2192";
+}
+
+.touch-controls__button--brake {
+  right: 1rem;
+  bottom: 1rem;
 }
 
 .touch-controls__column--right .touch-controls__button--brake span::before {
@@ -660,9 +671,9 @@ body[data-game-state="paused"] .touch-controls {
   }
 
   .hud--right {
-    top: auto;
+    top: 5.75rem;
     right: 1rem;
-    bottom: 1rem;
+    bottom: auto;
   }
 
   .hud--bottom {
@@ -740,8 +751,9 @@ body[data-game-state="paused"] .touch-controls {
   }
 
   .hud--right {
+    top: 5.25rem;
     right: 0.7rem;
-    bottom: 0.7rem;
+    bottom: auto;
   }
 
   .hud__card {
@@ -783,14 +795,29 @@ body[data-game-state="paused"] .touch-controls {
     display: block;
   }
 
-  .touch-controls__column--left {
+  .touch-controls__button--accelerate {
     left: 0.7rem;
     bottom: 0.7rem;
   }
 
-  .touch-controls__column--right {
+  .touch-controls__button--left {
+    left: calc(50% - 66px);
+    bottom: 4.95rem;
+  }
+
+  .touch-controls__button--right {
+    left: calc(50% + 6px);
+    bottom: 4.95rem;
+  }
+
+  .touch-controls__button--brake {
     right: 0.7rem;
-    bottom: 9.3rem;
+    bottom: 0.7rem;
+  }
+
+  .touch-controls__button--drift {
+    right: 0.7rem;
+    bottom: 8.55rem;
   }
 
   .touch-controls__button {
@@ -809,8 +836,18 @@ body[data-game-state="paused"] .touch-controls {
     min-height: 58px;
   }
 
-  .touch-controls__column--right {
-    bottom: 10rem;
+  .touch-controls__button--left {
+    left: calc(50% - 70px);
+    bottom: 5.2rem;
+  }
+
+  .touch-controls__button--right {
+    left: calc(50% + 6px);
+    bottom: 5.2rem;
+  }
+
+  .touch-controls__button--drift {
+    bottom: 9.2rem;
   }
 }
 
@@ -820,7 +857,17 @@ body[data-game-state="paused"] .touch-controls {
     min-height: 54px;
   }
 
-  .touch-controls__column--right {
-    bottom: 9.3rem;
+  .touch-controls__button--left {
+    left: calc(50% - 66px);
+    bottom: 4.95rem;
+  }
+
+  .touch-controls__button--right {
+    left: calc(50% + 6px);
+    bottom: 4.95rem;
+  }
+
+  .touch-controls__button--drift {
+    bottom: 8.55rem;
   }
 }
