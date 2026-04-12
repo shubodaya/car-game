@@ -121,7 +121,6 @@ const touchButtons = Array.from(document.querySelectorAll("[data-touch-control]"
 const touchButtonMap = new Map(
   touchButtons.map((button) => [button.dataset.touchControl, button]),
 );
-const roadTextureUrl = new URL("./assets/road-texture.svg", import.meta.url).href;
 const grassTextureUrl = new URL("./assets/grass-texture.svg", import.meta.url).href;
 const mustangModelUrl = new URL("./assets/mustang-gt.glb", import.meta.url).href;
 
@@ -195,20 +194,12 @@ loadScene().catch((error) => {
 });
 
 async function loadScene() {
-  const [roadTexture, grassTexture] = await Promise.all([
-    textureLoader.loadAsync(roadTextureUrl),
-    textureLoader.loadAsync(grassTextureUrl),
-  ]);
-
-  configureTexture(roadTexture, 1, 1);
+  const grassTexture = await textureLoader.loadAsync(grassTextureUrl);
   configureTexture(
     grassTexture,
     Math.max(6, track.bounds.width / 26),
     Math.max(6, track.bounds.height / 26),
   );
-
-  roadMesh.material.map = roadTexture;
-  roadMesh.material.needsUpdate = true;
 
   groundMesh.material.map = grassTexture;
   groundMesh.material.needsUpdate = true;
@@ -265,9 +256,9 @@ function setupTrack() {
     TRACK_WIDTH * 0.5,
     0.02,
     new THREE.MeshStandardMaterial({
-      color: "#ffffff",
-      roughness: 1,
-      metalness: 0,
+      color: "#4a4f55",
+      roughness: 0.96,
+      metalness: 0.08,
       side: THREE.DoubleSide,
     }),
   );
@@ -482,22 +473,7 @@ function prepareModel(model) {
 
 function attachCarVisuals(model) {
   car.model = model;
-
-  const shadow = new THREE.Mesh(
-    new THREE.CircleGeometry(1.95, 28),
-    new THREE.MeshBasicMaterial({
-      color: "#000000",
-      transparent: true,
-      opacity: 0.18,
-      depthWrite: false,
-    }),
-  );
-
-  shadow.rotation.x = -Math.PI * 0.5;
-  shadow.position.y = 0.03;
-  shadow.scale.set(1.3, 1.7, 1);
-
-  car.visual.add(shadow, model);
+  car.visual.add(model);
 }
 
 function detectModelForward(root) {
