@@ -1137,7 +1137,7 @@ function prepareMinimap() {
   context.fillRect(0, 0, width, height);
 
   drawTrackPath(context, TRACK_WIDTH * 1.32, "#47613b");
-  drawTrackPath(context, TRACK_WIDTH * 0.9, "#A9A9A9");
+  drawTrackPath(context, TRACK_WIDTH * 0.9, "#3a3f45");
   drawTrackPath(context, TRACK_WIDTH * 0.08, "rgba(255, 255, 255, 0.14)");
 
   const startLeft = track.startPoint
